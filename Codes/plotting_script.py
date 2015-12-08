@@ -29,11 +29,12 @@ class data_plotter:
             rt.append( p.rt )
         return np.min( rt ), np.max( rt )
     def get_test_data( self, pind=0 ):
+        a,p,v = self.benchmark.predict( pind, self.models[pind] )
         test_peptides = self.peptides[ self.benchmark.parts.get_test_part(pind) ]
 
-        ff = open('test_peptides.txt','w')
-        for t in test_peptides : 
-            ff.write('%s\n' % (t.sequence))
+        ff = open('../tmp/test_peptides.txt','w')
+        for i,t in enumerate( test_peptides ) : 
+            ff.write('%s,%g,%g\n' % (t.sequence, a[i], p[i] ))
         ff.close()
 
     def benchmark_gp( self ):

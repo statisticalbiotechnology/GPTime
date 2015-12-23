@@ -146,9 +146,9 @@ class peptide:
 class normalizer:
     def __init__( self ):
         self.mode = -1
-        def normalize_maxmin( self, featureMatrix ):
-            self.mode = 0
-            rows, cols = featureMatrix.shape
+    def normalize_maxmin( self, featureMatrix ):
+        self.mode = 0
+        rows, cols = featureMatrix.shape
 
         self.values1 = []; # Value 1 is Min
         self.values2 = []; # Value 2 is Max

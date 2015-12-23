@@ -1,11 +1,13 @@
 #!/usr/bin/python
 
 import getopt, sys
-import data_tools
-
 import numpy as np
-import ml_tools
 import pickle as pk
+
+import GPy
+
+from Codes import data_tools
+from Codes import ml_tools
 
 def load_peptides( path, randomize ):
     peptides = data_tools.read_data( path )
@@ -34,10 +36,20 @@ def load_model( path ):
     mgp = GPy.models.GPRegression(X,Y)
     mgp[:] = pa
 
-    model = rt_model( feature, type, mgp, norm,voc,em,y_params )
+    model = ml_tools.rt_model( feature, type, mgp, norm,voc,em,y_params )
+    return model
 
 def usage():
-    print "This is the usage"
+    print "Usage of GPTime Package"
+    print "[ -o, --operation ]\t:\t The execution operation, current supported operations [ train, predict ]"
+    print "[ -p, --peptides  ]\t:\t Path to the file containing their peptides and retention time"
+    print "[ -n, --ntrain    ]\t:\t Number of the peptides used for training"
+    print "[ -m, --model     ]\t:\t Path to the model file"
+    print "                   \t\t If operation is train, then this is output model path"
+    print "                   \t\t If operation is predict, then this is the input model path"
+    print "[ -r, --randomize ]\t:\t Randomizing the order of the input peptides"
+    print "[ -h, --help      ]\t:\t Shows this menu"
+
 
 def main():
 
@@ -46,12 +58,11 @@ def main():
     model_path = "NA"
     randomize = False
     ntrain = 100
-    nval = 100
 
     try :
         opts, args = getopt.getopt( sys.argv[1:], 
-                                   "ho:p:t:v:m:r", 
-                                   ["help","operation=","peptides=","ntrain=","nval=","model=","randomize"] 
+                                   "ho:p:t:m:r", 
+                                   ["help","operation=","peptides=","ntrain=","model=","randomize"] 
                                   )
     except getopt.GetoptError as err:
         print(err)
@@ -91,9 +102,12 @@ def main():
         peptides = load_peptides( peptides_path, randomize )
         model = load_model( model_path )
 
+        print model
+
         for p in peptides :
-            m,s = model.eval(p)
-            print p.sequence, m, s
+            m,v = model.eval(p) 
+            s = np.sqrt(v)
+            print p.sequence, p.rt,m,v,s
 
 
 if __name__=="__main__" :

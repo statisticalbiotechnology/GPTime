@@ -59,6 +59,10 @@ def main():
     randomize = False
     ntrain = 100
 
+    if len( sys.argv ) == 1 :
+        usage()
+        sys.exit(2)
+
     try :
         opts, args = getopt.getopt( sys.argv[1:], 
                                    "ho:p:t:m:r", 

@@ -50,7 +50,6 @@ def usage():
     print "[ -r, --randomize ]\t:\t Randomizing the order of the input peptides"
     print "[ -h, --help      ]\t:\t Shows this menu"
 
-
 def main():
 
     operation = "NA"

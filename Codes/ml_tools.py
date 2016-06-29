@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import pickle as pk
 from gp_tools import my_gp
 
+from scipy import stats
 from scipy.stats.stats import pearsonr
 from sklearn import svm, grid_search
 from sklearn.cluster import KMeans
@@ -16,6 +17,15 @@ from sklearn.linear_model import LinearRegression
 
 from joblib import Parallel, delayed
 import multiprocessing
+
+def chunk_it( seq, num ):
+    avg = len( seq ) / float( num )
+    out = []
+    last = 0.0
+    while last < len( seq ):
+        out.append( seq[int(last):int(last+avg)] )
+        last += avg
+    return out
 
 def train(i,bench):
     model = bench.train_model(i)
@@ -40,7 +50,7 @@ def single_train_gp(bench):
     models = [];
     for i in range(bench.parts.nfolds):
         print(i)
-        m = bench.train_gp_model(i) 
+        m = bench.train_gp_model(i)
         models.append(m)
     return models
 
@@ -64,6 +74,34 @@ def section_error_independent( bench, models ):
     for i,model in enumerate( models ):
         print(i)
         f,m,e = bench.eval_sections_independent(i,model)
+        fracs.append(f)
+        means.append(m)
+        errs.append(e)
+
+    fracs = np.matrix( fracs )
+    means = np.matrix( means )
+    errs = np.matrix( errs )
+
+    f_m = np.mean( fracs, axis=0 )
+    m_m = np.mean( means,axis=0 )
+    e_m = np.mean( errs, axis=0 )
+    e_s = np.std( errs, axis=0 )
+
+    f_m = np.squeeze( np.asarray( f_m ) )
+    m_m = np.squeeze( np.asarray( m_m ) )
+    e_m = np.squeeze( np.asarray( e_m ) )
+    e_s = np.squeeze( np.asarray( e_s ) )
+
+    return f_m, m_m, e_m, e_s
+
+def section_error_interval( bench, models ):
+    fracs = []
+    means = []
+    errs = []
+
+    for i,model in enumerate( models ):
+        print(i)
+        f,m,e = bench.eval_sections_interval(i,model)
         fracs.append(f)
         means.append(m)
         errs.append(e)
@@ -138,16 +176,16 @@ def actual_vs_predictive_bounds( a, p, std, min_a, max_a ,n ):
 
         pol = [];
 
-        for j in range(4):
+        for j in range(2):
             pol.append( c ** j );
 
         base.append( c )
         base_pol.append( pol )
         means.append(m)
         std_gp.append( np.mean( s_sub ))
-        std_dist.append( ss ) 
-        low.append( m-2*ss )
-        high.append( m+2*ss )
+        std_dist.append( ss )
+        low.append( c-2*ss )
+        high.append( c+2*ss )
 
     base_pol = np.matrix( base_pol )
 
@@ -164,8 +202,8 @@ def actual_vs_predictive_bounds( a, p, std, min_a, max_a ,n ):
     LR_high.fit( base_pol, high )
     high_p = LR_high.predict( base_pol )
 
-    return base, means_p, low_p, high_p
-    
+    return base, base, low_p, high_p
+
 
 def actual_vs_predictive_std( a, p, std, min_a, max_a ,n ):
     s = ( max_a - min_a ) / (n-1)
@@ -201,7 +239,7 @@ def actual_vs_predictive_std( a, p, std, min_a, max_a ,n ):
         base_pol.append( pol )
         means.append(m)
         std_gp.append( np.mean( s_sub ))
-        std_dist.append( ss ) 
+        std_dist.append( ss )
         low.append( m-2*ss )
         high.append( m+2*ss )
 
@@ -313,7 +351,7 @@ def load_rt_models( path ):
     models = []
     kernels = []
 
-    for m in models_data : 
+    for m in models_data :
         feature = m[0]
         type = m[1]
         X = m[2]
@@ -401,11 +439,11 @@ class rt_model:
         self.norm.normalize(vec)
         vec = np.matrix(vec)
         vals = self.model.predict(np.array(vec))
-        
+
         if len( self.y_params ) > 0 :
             print(vals[0])
             print(self.y_params[0])
-            
+
             vals[0] = vals[0] + self.y_params[0]
 
 
@@ -497,12 +535,12 @@ class rt_benchmark:
         Y_params = [];
         if self.model_type == 'gp':
             Y = np.transpose(np.matrix(Y))
-            Y_mean = np.mean(Y) 
+            Y_mean = np.mean(Y)
             Y_params.append( Y_mean )
             Y = Y - Y_mean
         elif self.model_type == 'svr':
             Y = np.transpose(Y)
-            
+
         norm = feature_extraction.normalizer()
 
         if self.feature == "elude":
@@ -538,10 +576,10 @@ class rt_benchmark:
 
         Y_params = [];
         Y = np.transpose(np.matrix(Y))
-        #Y_mean = np.mean(Y) 
+        #Y_mean = np.mean(Y)
         #Y_params.append( Y_mean )
         #exY = Y - Y_mean
- 
+
         norm = feature_extraction.normalizer()
 
         if self.feature == "elude":
@@ -586,7 +624,7 @@ class rt_benchmark:
             m.optimize_restarts(num_restarts=10, verbose=False)
             models.append( rt_model(self.feature, self.model_type, m, norm, voc, em) )
         return models
-        
+
     def predict(self, ind, model):
         test_peptides = self.peptides[self.parts.get_test_part(ind)]
         actual = []
@@ -605,7 +643,7 @@ class rt_benchmark:
     def predict_train( self, ind, model ):
         train_peptides = self.peptides[self.parts.get_train_part(ind)]
         train_peptides = train_peptides[0:self.ntrain]
-        
+
         actual = []
         predicted = []
         std = []
@@ -626,7 +664,7 @@ class rt_benchmark:
         std = []
         for p in test_peptides :
             actual.append(p.rt)
-            
+
             vs = [];
             ss = [];
             for m in models :
@@ -649,7 +687,7 @@ class rt_benchmark:
     def hist_eval( self, ind, model, pp ):
         train_actual, train_predicted, train_std = self.predict_train(0,model)
         test_actual, test_predicted, test_std = self.predict(0,model)
-        
+
         train_f, train_m, train_d = self.test_sorted2( train_actual, train_predicted, train_std )
         test_f, test_m, test_d = self.test_sorted2( test_actual, test_predicted, test_std )
 
@@ -661,7 +699,7 @@ class rt_benchmark:
         #    v += q;
         #    if i < r :
         #        v += 1;
-        #    pp.subplot(nsec,i,)   
+        #    pp.subplot(nsec,i,)
         #    o += v
 
 
@@ -698,7 +736,9 @@ class rt_benchmark:
             ff.close()
 
     def eval_sections_independent( self, ind, model, nsec=10 ):
-        actual, predicted, std = self.predict(ind,model)
+        actual, predicted, var = self.predict(ind,model)
+        std = np.sqrt( var )
+
         inds = np.argsort(std)
         q = len(inds)/nsec
         r = len(inds)%nsec
@@ -725,7 +765,7 @@ class rt_benchmark:
             a = actual[ inds[o:v ] ]
             a_part = actual[ inds[o:v] ]
             p = predicted[ inds[o:v] ]
-            s = np.sqrt( std[ inds[o:v] ] )
+            s = std[ inds[o:v] ]
 
             o = v
 
@@ -734,7 +774,39 @@ class rt_benchmark:
             err.append( np.sqrt( et.mean_square_error(a,p) ) )
 
         return np.array( fraction ), np.array( means ), np.array( err )
-    
+
+    def eval_sections_interval( self, ind, model, nsec=10 ):
+        a, p, v = self.predict(ind,model)
+        s = np.sqrt(v)
+        inds = np.argsort(s)
+        chunks = chunk_it( inds, nsec )
+
+        e = a - p
+        n, min_max, mean, var, skew, kurt = stats.describe(e)
+        std = np.sqrt( var )
+        I = stats.norm.interval(0.95,loc=mean,scale=std)
+        print(I)
+
+        fraction = []
+        means = []
+        percentage = []
+
+        for i,c in enumerate(chunks) :
+            ce = e[c]
+
+            inds0 = np.where( ce <= I[0] )[0]
+            inds1 = np.where( ce >= I[1] )[0]
+            p = (len(inds0) + len(inds1))/float(len(c)) * 100
+
+            fraction.append( (i+1)/float(nsec) )
+            means.append( np.mean( s[c] ) )
+            percentage.append( p )
+
+        print( percentage )
+
+        return np.array( fraction ), np.array( means ), np.array( percentage )
+
+
     def eval_sections_overall( self, ind, model, nsec=10 ):
         actual, predicted, std = self.predict(ind,model)
         inds = np.argsort(std)

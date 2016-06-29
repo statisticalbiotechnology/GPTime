@@ -46,9 +46,9 @@ Different training files that were used in our paper can be found in ./Data .
 Following command line is an example of how a model is trained. The output model
 is saved to model.pk .
 
-python gptime.py --operation train --peptides ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_01.rtimes_q_0.001.tsv --model ./model.pk --ntrain 100
+python gptime.py --operation train --peptides ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06.rtimes_q_0.001.tsv --model ./model.pk --ntrain 100
 
-This model is trained over the first 100 peptides of the data file ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_01.rtimes_q_0.001.tsv
+This model is trained over the first 100 peptides of the data file ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06.rtimes_q_0.001.tsv
 and is saved to ./model.pk . 
 
 3.0 - Prediction
@@ -56,7 +56,7 @@ and is saved to ./model.pk .
 Similarly to predict the retention time for the content of a file, we call the 
 gptime.py using predict operation :
 
-python gptime.py --operation predict --peptides ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_01.rtimes_q_0.001.tsv --model ./model.pk
+python gptime.py --operation predict --peptides ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06.rtimes_q_0.001.tsv --model ./model.pk
 
 This way, we calculate the RT time and Predictive Standard deviation of the 
 peptides in the file using the model ./model.pk .

@@ -116,11 +116,56 @@ class data_plotter:
         pp.savefig('./plots/dist_vs_std.pdf')
 
     def section_error_independent( self, over_all_err=None ):
-        f_m, m_m, e_m, e_v = ml_tools.section_error_independent( self.benchmark, self.models )
+        def eval_sections_independent( values, nsec=10 ):
+            et = ml_tools.eval_tools()
+            a,p,v = values
+            s = np.sqrt(v)
+
+            inds = np.argsort( s )
+            chunks = chunk_it( inds, nsec )
+
+            fraction = []
+            err = []
+            means = []
+
+            for i,c in enumerate( chunks ):
+                ca = a[ c ]
+                cp = p[ c ]
+                cs = s[ c ]
+
+                fraction.append( float(i+1)/nsec )
+                means.append( np.mean(cs) )
+                err.append( np.sqrt( et.mean_square_error(ca,cp) ) )
+
+            return np.array( fraction ), np.array( means ), np.array( err )
+
+        fracs = []
+        means = []
+        errs = []
+
+        for i in range(len(self.values)):
+            f,m,e = eval_sections_independent( self.values[i] )
+            fracs.append(f)
+            means.append(m)
+            errs.append(e)
+
+        fracs = np.matrix( fracs )
+        means = np.matrix( means )
+        errs = np.matrix( errs )
+
+        f_m = np.mean( fracs, axis=0 )
+        m_m = np.mean( means,axis=0 )
+        e_m = np.mean( errs, axis=0 )
+        e_s = np.std( errs, axis=0 )
+
+        f_m = np.squeeze( np.asarray( f_m ) )
+        m_m = np.squeeze( np.asarray( m_m ) )
+        e_m = np.squeeze( np.asarray( e_m ) )
+        e_s = np.squeeze( np.asarray( e_s ) )
 
         pp.figure()
         pp.plot( m_m, e_m,'.-',label='Section RMSE' )
-        pp.fill_between( m_m, e_m-e_v , e_m+e_v, alpha=0.8, facecolor='0.75' )
+        pp.fill_between( m_m, e_m-e_s , e_m+e_s, alpha=0.8, facecolor='0.75' )
         if over_all_err is not None :
             pp.plot( m_m, np.ones(m_m.shape)*over_all_err, 'r-.',linewidth=2,label='Overall RMSE')
 
@@ -153,63 +198,59 @@ class data_plotter:
         pp.grid()
         pp.savefig('./plots/ind_section_interval.pdf')
 
-
-    def dummy():
-
-
-        s = np.sqrt(v)
-
-        min_rt = np.min(a)
-        max_rt = np.max(a)
-
-        inds = np.argsort( s )
-
-        def chunk_it( seq, num ):
-            avg = len( seq ) / float( num )
-            out = []
-            last = 0.0
-
-            while last < len( seq ):
-                out.append( seq[int(last):int(last+avg)] )
-                last += avg
-            return out
-
-        chunks = chunk_it( inds, 10 )
-        eval = ml_tools.eval_tools()
-
-        x_axis = []
-        y_axis = []
-
-
-        for c in chunks :
-            sub_a = a[c]
-            sub_p = p[c]
-            sub_v = v[c]
-
-            x_axis.append( np.mean( sub_v ) )
-            y_axis.append( eval.delta_t( sub_a, sub_p, min_value=min_rt, max_value=max_rt ) )
-        pp.figure()
-        pp.plot( x_axis, y_axis,'.-' )
-        pp.xlabel('Average Predicted Standard Deviation',fontsize=18)
-        pp.ylabel(r'$w_r^{95\%}$',fontsize=18)
-        #pp.title('Sections Error',fontsize=20)
-        pp.grid()
-        pp.savefig('./plots/ind_section_delta_rt.pdf')
-        #a,p,v = self.benchmark.predict( pind, self.models[pind] )
-        #s = np.sqrt(v)
-
-        #min_rt = np.min(a)
-        #max_rt = np.max(a)
-
-        #print( min_rt, max_rt )
-
-
     def section_error_overall( self ):
-        f_m, m_m, e_m, e_v = ml_tools.section_error_overall( self.benchmark, self.models )
+        def eval_sections_overall( values, nsec=10 ):
+            et = ml_tools.eval_tools()
+            a,p,v = values
+            s = np.sqrt(v)
+
+            inds = np.argsort( s )
+            chunks = chunk_it( inds, nsec )
+
+            fraction = []
+            err = []
+            means = []
+
+            for i in range( len(chunks) ):
+                sub_chunks = chunks[:i+1]
+                selection = np.concatenate( sub_chunks )
+
+                sa = a[ selection ]
+                sp = p[ selection ]
+                ss = s[ selection ]
+
+                fraction.append( float(i+1)/nsec )
+                means.append( np.mean(ss) )
+                err.append( np.sqrt( et.mean_square_error(sa,sp) ) )
+            return np.array( fraction ), np.array( means ), np.array( err )
+
+        fracs = []
+        means = []
+        errs = []
+
+        for i in range(len(self.values)):
+            f,m,e = eval_sections_overall( self.values[i] )
+            fracs.append(f)
+            means.append(m)
+            errs.append(e)
+
+        fracs = np.matrix( fracs )
+        means = np.matrix( means )
+        errs = np.matrix( errs )
+
+        f_m = np.mean( fracs, axis=0 )
+        m_m = np.mean( means,axis=0 )
+        e_m = np.mean( errs, axis=0 )
+        e_s = np.std( errs, axis=0 )
+
+        f_m = np.squeeze( np.asarray( f_m ) )
+        m_m = np.squeeze( np.asarray( m_m ) )
+        e_m = np.squeeze( np.asarray( e_m ) )
+        e_s = np.squeeze( np.asarray( e_s ) )
 
         pp.figure()
         pp.plot( f_m, e_m,'.-' )
-        pp.fill_between( f_m, e_m-e_v , e_m+e_v, alpha=0.8, facecolor='0.75' )
+        pp.fill_between( f_m, e_m-e_s , e_m+e_s, alpha=0.8, facecolor='0.75' )
 
         [ x1,x2,y1,y2 ] = pp.axis();
         pp.axis( [ np.min(f_m), np.max(f_m), y1,y2 ])
@@ -223,7 +264,7 @@ class data_plotter:
         return e_m[-1]
 
     def actual_vs_predicted( self, pind=0 ):
-        a,p,v = self.benchmark.predict( pind, self.models[pind] )
+        a,p,v = self.values[0]
         s = np.sqrt(v)
         rt_min,rt_max = self.rt_range()
         base, means_p,low_p, high_p = ml_tools.actual_vs_predictive_bounds(a,p,s,rt_min,rt_max,50)
@@ -248,7 +289,7 @@ class data_plotter:
         return s,e
 
     def std_histogram( self, pind=0 ):
-        a,p,v = self.benchmark.predict( pind, self.models[pind] )
+        a,p,v = self.values[0]
         rt_min,rt_max = self.rt_range()
         s = np.sqrt(v)
         inds = np.argsort( s )
@@ -292,10 +333,6 @@ class data_plotter:
         mat = mat / np.max( mat )
 
         mat = mat.T
-
-        print(len(loc_bins))
-        print(len(std_bins))
-        print(mat.shape)
 
         pp.close('all')
         pp.figure()
@@ -366,7 +403,7 @@ class data_plotter:
         pp.legend(['Actual Variance','Predicted Variance'],loc=4)
         pp.savefig('actual_vs_predicted_variance.pdf')
 
-    def PErr_vs_PSTD( self ):
+    def false_negative_ratio( self ):
         all_pstd = []
         all_err0 = []
         all_err1 = []
@@ -421,7 +458,7 @@ class data_plotter:
         pp.legend(loc=4)
         pp.savefig('./plots/PErr_vs_PSTD.pdf')
 
-    def Overall_PErr_vs_PSTD( self ):
+    def false_positive_ratio( self ):
         def execute_for_part( aa, pp , vv ):
             ss = np.sqrt( vv )
             inds = np.argsort(ss)

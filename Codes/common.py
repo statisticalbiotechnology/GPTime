@@ -5,10 +5,7 @@ import os
 
 class parameters:
     def __init__( self ):
-        if platform.system() == 'Darwin' :
-            self.data_root = "/Users/heydar/Stuff/tmp/gprt"
-        else :
-            self.data_root = "/media/hdd/heydar/data/gprt"
+        self.data_root = '../Models'
 
         #self.base = "20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06"
         self.base = "20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06.rtimes_q_0.001"

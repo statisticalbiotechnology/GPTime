@@ -3,6 +3,15 @@ GPTime python package
 
 -----------------------------------
 
+0.0 - Installation
+
+To install the package run the following command in the terminal :
+
+git clone https://github.com/statisticalbiotechnology/GPTime.git
+
+The application will be installed in directory GPTime, inside the path in which
+you ran this command.
+
 1.0 - Dependencies 
 
 The GPTime package is dependant on several other python packages such as 

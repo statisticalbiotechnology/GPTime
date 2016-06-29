@@ -54,3 +54,7 @@ peptides in the file using the model ./model.pk .
 
 The output of this process is for each row :
 peptide actual_rt predicted_rt predicted_variance predicted_std
+
+4.0 - Generating the plots of the manuscript
+
+To generate the plots of the manuscript look at the jupyter notebook ./Codes/Manuscript_plots.ipynb

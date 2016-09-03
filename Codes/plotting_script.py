@@ -290,6 +290,70 @@ class data_plotter:
 
     def std_histogram( self, pind=0 ):
         a,p,v = self.values[0]
+        s = np.array(np.sqrt(v))
+
+        inds = np.argsort( s )
+        chunks = chunk_it( inds, 10 )
+
+        std_aves = []
+        std_bounds = []
+
+        for c in chunks :
+            std_aves.append( np.mean(s[c]) )
+            std_bounds.append( [ np.min(s[c]), np.max(s[c]) ] )
+
+        std_aves = np.array( std_aves )
+        std_bounds = np.array( std_bounds )
+
+        print( std_aves )
+        print( std_bounds )
+
+        rt_inds = np.argsort( a )
+        rt_chunks = chunk_it( rt_inds, 10 )
+
+        rt_aves = []
+        rt_bounds = []
+        for c in rt_chunks :
+            rt_aves.append( np.mean( a[c] ) )
+            rt_bounds.append( [ np.min(a[c]), np.max(a[c]) ] )
+
+        rt_aves = np.array( rt_aves )
+        rt_bounds = np.array( rt_bounds )
+
+        print( rt_aves )
+        print( rt_bounds )
+
+        mat = np.zeros( ( len(rt_aves), len(std_aves) ) )
+
+        for i,c in enumerate( rt_chunks ):
+            chunk_stds = s[c]
+            for v in chunk_stds :
+                selection = -1
+                for j,b in enumerate( std_bounds ):
+                    if v >= b[0] and v <= b[1] :
+                        selection = j
+                        break
+                if selection >= 0 :
+                    mat[i,j] += 1
+            mat[i,:] = mat[i,:] / np.sum( mat[i,:] )
+
+        xmin = np.min( std_aves )
+        xmax = np.max( std_aves )
+        ymin = np.min( rt_aves )
+        ymax = np.max( rt_aves )
+
+        #pp.close('all')
+        pp.figure()
+        pp.set_cmap('hot_r')
+        pp.matshow( mat, origin='lower', extent=[xmin, xmax, ymin, ymax ], aspect='auto' )
+        #, interpolation='nearest', extent=[xmin, xmax, ymin, ymax],origin='lower' )
+        pp.colorbar()
+        pp.xlabel('Average Predicted Standard Deviation',fontsize=18)
+        pp.ylabel('Retention Time (Minutes)',fontsize=18)
+        pp.savefig('./plots/selection_histogram.pdf')
+
+    def std_histogram_old( self ):
+        a,p,v = self.values[0]
         rt_min,rt_max = self.rt_range()
         s = np.sqrt(v)
         inds = np.argsort( s )
@@ -300,7 +364,7 @@ class data_plotter:
         sec = len( inds )/nsec
         chunks = zip( *[iter(inds)]*sec )
 
-        loc_bins = [];
+        loc_bins = [];ggffdf
         rt_sec = (rt_max - rt_min)/(nbins+1)
 
         for i in range( nbins+1 ):
@@ -337,15 +401,13 @@ class data_plotter:
         pp.close('all')
         pp.figure()
         pp.set_cmap('hot_r')
-        pp.matshow( mat, origin='lower', extent=[xmin, xmax, rt_min, rt_max ], aspect='auto' )#, interpolation='nearest', extent=[xmin, xmax, ymin, ymax],origin='lower' )
+        pp.matshow( mat, origin='lower', extent=[xmin, xmax, rt_min, rt_max ], aspect='auto' )
+        #, interpolation='nearest', extent=[xmin, xmax, ymin, ymax],origin='lower' )
         pp.colorbar()
         pp.xlabel('Predicted Standard Deviation',fontsize=18)
         pp.ylabel('Retention Time (Minutes)',fontsize=18)
         #pp.title('Peptide PSTD Concentration',fontsize=20)
         pp.savefig('./plots/selection_histogram.pdf')
-
-
-
         #np.savetxt('./data/x_loc_bins.txt',loc_bins)
         #np.savetxt('./data/y_std_bins.txt',std_bins)
         #np.savetxt('./data/mat.txt',mat)

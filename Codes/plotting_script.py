@@ -95,6 +95,15 @@ class data_plotter:
         pp.savefig('./plots/gp_vs_svr.pdf')
 
     def dist_vs_std( self, pind=0 ):
+        a,p,v = self.values[pind]
+        s = np.sqrt(v)
+
+        s_sorted = np.array(np.sort( s ))
+        n = len(s_sorted) / 10
+        chunks = [ s_sorted[i:i+n] for i in range(0,len(s_sorted),n) ]
+
+        pp.figure()
+        pp.subplot(2, 1, 1)
         test_vectors = self.benchmark.get_test_vectors(pind,self.models[pind])
         dist = [];
         std = [];
@@ -107,11 +116,29 @@ class data_plotter:
         dist = np.array( dist )
         std = np.array( std )
 
-        pp.figure()
         pp.plot( std, dist, 'r.')
         pp.grid()
-        pp.ylabel('Distance From Training Data',fontsize=18)
+        pp.ylabel('Distance From Training Data')
+
+        pp.subplot(2, 1, 2)
+
+        for i,c in enumerate(chunks) :
+            y = [ i+1, i+1 ]
+            x = [ np.min(c), np.max(c) ]
+            py = [ i+1 ]
+            px = [ np.mean(c) ]
+
+            pp.plot( x,y,'ro-', linewidth=2 )
+            pp.plot( px, py, 'b.' )
+
+        [ x1,x2,y1,y2 ] = pp.axis();
+        pp.axis( [x1, x2, y1-1,y2+1])
+        pp.grid()
+        pp.ylabel('Bin Index')
+        pp.legend( ['Bin PSTD Extends','Bin PSTD Mean'], loc=4)
+
         pp.xlabel('Predicted Standard Deviation',fontsize=18)
+
         #pp.title('Distance vs. Standard Deviation',fontsize=20)
         pp.savefig('./plots/dist_vs_std.pdf')
 
@@ -305,8 +332,8 @@ class data_plotter:
         std_aves = np.array( std_aves )
         std_bounds = np.array( std_bounds )
 
-        print( std_aves )
-        print( std_bounds )
+        #print( std_aves )
+        #print( std_bounds )
 
         rt_inds = np.argsort( a )
         rt_chunks = chunk_it( rt_inds, 10 )
@@ -320,8 +347,8 @@ class data_plotter:
         rt_aves = np.array( rt_aves )
         rt_bounds = np.array( rt_bounds )
 
-        print( rt_aves )
-        print( rt_bounds )
+        #print( rt_aves )
+        #print( rt_bounds )
 
         mat = np.zeros( ( len(rt_aves), len(std_aves) ) )
 

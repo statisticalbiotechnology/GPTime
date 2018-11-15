@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import numpy as np
-import retention_model as rm
+from . import retention_model as rm
 
 def get_ith_descriptor( i,p, voc ):
 	print(i)
@@ -47,7 +47,7 @@ class elute_model:
 	def compute_features( self, sequence ):
 		return rm.computeRetentionFeatureVector(self.aaAlphabet, sequence, self.customIndex)
 
-class model_generator:
+class mapping_generator:
     def __init__( self, peptides ):
         self.peptides = peptides;
         self.amino_list = self.amino_acid_list()

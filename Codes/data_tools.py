@@ -1,9 +1,7 @@
 #train_inds train_inds !/usr/bin/python
 
 import numpy as np
-from matplotlib import pyplot as pp
 import feature_extraction as extraction
-pp.ion()
 
 def read_data( data_path ):
 	ff = open(data_path, 'r')
@@ -29,6 +27,6 @@ def checked_duplicated(peptides):
         for i in range(len(candiates)):
             for pp in peptides:
                 if candiates[i] == pp.sequence and rt[i] != pp.rt:
-                    return "Error: Same peptide has different RT"
+                    return "Error: Same peptides have different RT"
 
-    return "All same peptide has same RT"
+    return "All same peptide have same RT"

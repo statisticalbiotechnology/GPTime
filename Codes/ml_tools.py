@@ -422,6 +422,10 @@ class rt_model:
         self.em = em
         self.y_params = y_params
 
+    def model_params( self ):
+        return [ self.feature, self.model_type, self.model, self.norm,
+                 self.voc, self.em, self.y_params ]
+
     def get_vector( self, p ):
         if self.feature == "bow":
             vec = p.bow_descriptor(self.voc)

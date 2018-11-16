@@ -29,7 +29,7 @@ def buildRetentionIndex(aaAlphabet, psmDescriptions,
     retentionTimes -= np.mean(retentionTimes)
     retentionTimes /= np.std(retentionTimes)
 
-  customIndex = np.linalg.lstsq(featureMatrix, retentionTimes, rcond=1)[0]
+  customIndex = np.linalg.lstsq(featureMatrix, retentionTimes, rcond=None)[0]
   return customIndex
 
 def computeRetentionIndexFeatureMatrix(aaAlphabet, psmDescriptions):

@@ -7,8 +7,7 @@ def parse_commandline():
     parser = argparse.ArgumentParser(description="GPTime Train")
     parser.add_argument('-p','--peptides', help="Path to the file containing their peptides and retention time", required=True)
     parser.add_argument('-n','--ntrain', help="Number of the peptides used for training (default=100)", type=int, default=100)
-    parser.add_argument('-m','--model', help="""Path to the model file. If operation is train, then this is output model path.
-                                                If operation is predict, then this is the input model path."""
+    parser.add_argument('-m','--model', help="""Path to save the model file."""
                                                 , required=True)
     parser.add_argument('-r','--randomize', help="Randomizing the order of the input peptides", dest="randomize",
                         action='store_true')
@@ -21,7 +20,9 @@ def parse_commandline():
 if __name__=="__main__" :
     args = parse_commandline()
 
-    peptides = GPTime.peptides.load(args.peptides, check_duplicates=False)
+    peptides = GPTime.peptides.load(args.peptides,
+                                    randomize=args.randomize,
+                                    check_duplicates=False)
     trainer = GPTime.model.train(peptides,'elude',args.ntrain)
     model = trainer.train_model()
     GPTime.model.save( model, args.model )

@@ -6,8 +6,7 @@ import GPTime
 def parse_commandline():
     parser = argparse.ArgumentParser(description="GPTime Train")
     parser.add_argument('-p','--peptides', help="Path to the file containing their peptides and retention time", required=True)
-    parser.add_argument('-m','--model', help="""Path to the model file. If operation is train, then this is output model path.
-                                                If operation is predict, then this is the input model path."""
+    parser.add_argument('-m','--model', help="""Path to the model file."""
                                                 , required=True)
     args = parser.parse_args()
 

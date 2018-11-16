@@ -34,9 +34,9 @@ Different training files that were used in our paper can be found in ./Data .
 Following command line is an example of how a model is trained. The output model
 is saved to model.pk .
 
-python train.py --peptides ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06.rtimes_q_0.001.tsv --model ./model.pkl --ntrain 100
+python train.py --peptides ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06.rtimes_q_0.001.tsv --model ./model.pkl --ntrain 1000
 
-This model is trained over the first 100 peptides of the data file ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06.rtimes_q_0.001.tsv
+This model is trained over the first 1000 peptides of the data file ./Data/20110922_EXQ4_NaNa_SA_YeastEasy_Labelfree_06.rtimes_q_0.001.tsv
 and is saved to ./model.pkl .
 
 3.0 - Prediction
